@@ -1,0 +1,14 @@
+file_path:
+   # 请求的url
+   base_host: http://192.168.4.160:7770
+   # 测试报告输出目录/var/lib/jenkins/workspace/pitpat-auto/allure_report
+   Report: ../report_allure
+   Result: ../result
+   excel_path: ../TestExcel/
+   # 用例数据初始化到yaml目录
+   yaml_path: ../data/yaml/
+   # 接口请求host
+   url_as: http://192.168.4.160:7770
+base_info:
+   email: plz123456@163.com
+   hasAppLogin: OKey
