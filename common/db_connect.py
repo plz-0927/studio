@@ -3,81 +3,49 @@
 # @Email:plz0927@163.com
 # @Author: Russ
 
-
 import pymysql
 from common.log_handler import logger
 
 
-class MysqlConnect(object):
-    conn = None
+class MysqlConnect:
     logger = logger
 
-    def __init__(self, host, username, password, db, charset='utf-8', port=3306):
-
-        self.host = host
-        self.username = username
-        self.password = password
-        self.db = db
-        self.charset = charset
-        self.port = port
-        self.cur = None
-
-    # 连接数据库
-    def connect(self):
-
+    def __init__(self, host, username, password, db, port, charset):
         try:
-            self.conn = pymysql.connect(host=self.host, user=self.username, password=self.password, database=self.db,
-                                        port=3306)
+            self.conn = pymysql.connect(host=host, user=username, password=password, database=db,
+                                        port=port, charset=charset)
             self.cur = self.conn.cursor()
         except Exception as e:
-            return self.logger.info("Database {0} connection failed".format(e))
+            logger.info("Database {0} connection failed".format(e))
 
     # 关闭数据库连接
-    def close_connect(self):
+    def __del__(self):  # 对象资源被释放时触发，在对象即将被删除时的最后操作
+        # 关闭游标
         self.cur.close()
+        # 关闭数据库连接
         self.conn.close()
 
-    # 查询一条记录
-    def get_one(self, sql):
-        try:
-            self.connect()
-            self.cur.execute(sql)
-            result = self.cur.fetchone()
-            self.close_connect()
-        except Exception as e:
-            return self.logger.info("查询报错:{0}".format(e))
-        return result
+    def select_db(self, sql):
+        """查询"""
+        # 检查连接是否断开，如果断开就进行重连
+        self.conn.ping(reconnect=True)
+        # 使用 execute() 执行sql
+        self.cur.execute(sql)
+        # 使用fetchall() 获取查询结果
+        data = self.cur.fetchall()
+        return data
 
-    # 查询所有记录
-    def get_all(self, sql):
+    def execute_db(self, sql):
+        """更新/新增/删除"""
         try:
-            self.connect()
+            # 检查连接是否断开，如果断开就进行重连
+            self.conn.ping(reconnect=True)
+            # 使用 execute() 执行sql
             self.cur.execute(sql)
-            result_list = self.cur.fetchall()
-            self.close_connect()
-        except Exception as e:
-            return self.logger.info("查询报错:{0}".format(e))
-        return result_list
-
-    # 编辑
-    def _edit(self, sql):
-        try:
-            self.connect()
-            count = self.cur.execute(sql)
+            # 提交事务
             self.conn.commit()
-            self.close_connect()
         except Exception as e:
-            return self.logger.info("编辑报错:{0}".format(e))
-        return count
+            print("操作出现错误：{}".format(e))
+            # 回滚所有更改
+            self.conn.rollback()
 
-    # 修改
-    def update(self, sql):
-        return self._edit(sql)
-
-    # 插入
-    def insert(self, sql):
-        return self._edit(sql)
-
-    # 删除
-    def delete(self, sql):
-        return self._edit(sql)
