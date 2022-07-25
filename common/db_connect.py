@@ -48,4 +48,3 @@ class MysqlConnect:
             print("操作出现错误：{}".format(e))
             # 回滚所有更改
             self.conn.rollback()
-
